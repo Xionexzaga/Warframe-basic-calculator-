@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Warframe Damage Calculator (MVP)</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, sans-serif;
+      background: #0b0e14;
+      color: #e6e6e6;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: auto;
+      padding: 16px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-bottom: 16px;
+      color: #f5c97a;
+    }
+
+    .card {
+      background: #161b22;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      opacity: 0.85;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #0f1420;
+      color: #fff;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: #f5c97a;
+      color: #000;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
+    .output {
+      margin-top: 12px;
+      font-size: 0.95rem;
+    }
+
+    .range {
+      margin-top: 6px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <h1>Warframe Damage MVP</h1>
+
+    <div class="card">
+      <label>Base Damage</label>
+      <input id="base" type="number" value="100" step="0.1"/>
+
+      <label>Scaling Factor</label>
+      <input id="scaling" type="number" value="3.0" step="0.1"/>
+
+      <label>Crit Factor</label>
+      <input id="crit" type="number" value="2.5" step="0.1"/>
+
+      <label>Global Multiplier</label>
+      <input id="global" type="number" value="1.55" step="0.05"/>
+
+      <button onclick="calculate()">Calcular</button>
+    </div>
+
+    <div class="card output" id="output">
+      <strong>Resultado</strong>
+      <div class="range" id="normal"></div>
+      <div class="range" id="critResult"></div>
+    </div>
+
+  </div>
+
+  <script>
+    function calculate() {
+      const base = parseFloat(document.getElementById("base").value);
+      const scaling = parseFloat(document.getElementById("scaling").value);
+      const crit = parseFloat(document.getElementById("crit").value);
+      const global = parseFloat(document.getElementById("global").value);
+
+      const baseDamage = base * scaling * global;
+
+      // rangos relativos (±10% como placeholder lógico)
+      const minNormal = baseDamage * 0.9;
+      const maxNormal = baseDamage * 1.1;
+
+      const minCrit = minNormal * crit;
+      const maxCrit = maxNormal * crit;
+
+      document.getElementById("normal").textContent =
+        `Normal: ${minNormal.toFixed(1)} → ${maxNormal.toFixed(1)}`;
+
+      document.getElementById("critResult").textContent =
+        `Crit:   ${minCrit.toFixed(1)} → ${maxCrit.toFixed(1)}`;
+    }
+
+    calculate();
+  </script>
+</body>
+</html>
