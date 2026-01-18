@@ -72,15 +72,14 @@ button {
   margin-top: 6px;
 }
 
-/* colores */
 .normal { color: #9aa4b2; }
 .orange { color: #ffa500; }
 .red { color: #ff4d4d; }
 .heavy { color: #7cf7c4; }
 
 .phrase {
-  font-size: 0.8rem;
-  opacity: 0.8;
+  font-size: 0.85rem;
+  margin-top: 6px;
 }
 </style>
 </head>
@@ -142,13 +141,10 @@ button {
 <strong>Resultado estimado</strong>
 
 <div id="normal" class="range normal"></div>
-<div class="phrase">“Puede cortar… pero no impresiona.”</div>
-
 <div id="orange" class="range orange"></div>
-<div class="phrase">“Empieza a mostrar carácter.”</div>
-
 <div id="red" class="range red"></div>
-<div class="phrase">“Esto ya mata campeones.”</div>
+
+<div id="verdict" class="phrase"></div>
 
 <div id="heavy" class="range heavy"></div>
 
@@ -195,13 +191,34 @@ function calculate() {
   document.getElementById("red").textContent =
     `Crit Rojo: ${redMin.toFixed(0)} → ${redMax.toFixed(0)}`;
 
+  const verdictEl = document.getElementById("verdict");
+  let text = "";
+  let color = "#9aa4b2";
+
+  if (redMax < 5000) {
+    text = "Esta arma no puede usarse así";
+    color = "#6b7280";
+  } else if (redMax < 20000) {
+    text = "No cortará";
+    color = "#9aa4b2";
+  } else if (redMax < 80000) {
+    text = "Cortará";
+    color = "#ffa500";
+  } else {
+    text = "Es letal";
+    color = "#ff4d4d";
+  }
+
+  verdictEl.textContent = text;
+  verdictEl.style.color = color;
+
   const weaponType = document.getElementById("weaponType").value;
   const attackType = document.getElementById("attackType")?.value;
   const combo = Number(document.getElementById("combo")?.value || 1);
 
   if (weaponType === "melee" && attackType === "heavy") {
     document.getElementById("heavy").textContent =
-      `Heavy (x${combo}): ${(min*combo).toFixed(0)} → ${(max*combo).toFixed(0)}`;
+      `Heavy (x${combo}): ${(min * combo).toFixed(0)} → ${(max * combo).toFixed(0)}`;
   } else {
     document.getElementById("heavy").textContent = "";
   }
@@ -213,4 +230,3 @@ calculate();
 
 </body>
 </html>
-
