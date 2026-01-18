@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Warframe Damage Calculator (Simple)</title>
+<title>Warframe Damage MVP</title>
 
 <style>
 body {
@@ -32,29 +32,17 @@ h1 {
 }
 
 label {
+  font-size: 0.85rem;
+  opacity: 0.85;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
-  margin-bottom: 4px;
-}
-
-.help-btn {
-  border: 1px solid #f5c97a;
-  background: none;
-  color: #f5c97a;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 0.75rem;
-  cursor: pointer;
 }
 
 .help {
-  display: none;
-  font-size: 0.75rem;
-  opacity: 0.8;
-  margin-bottom: 8px;
+  cursor: pointer;
+  color: #f5c97a;
+  font-weight: bold;
 }
 
 select, input {
@@ -73,26 +61,27 @@ button {
   border-radius: 10px;
   border: none;
   background: #f5c97a;
+  color: #000;
   font-weight: bold;
 }
 
 .hidden { display: none; }
 
-.range { font-family: monospace; }
-
-.verdict {
-  margin-top: 10px;
-  font-weight: bold;
-  padding: 10px;
-  border-radius: 8px;
-  text-align: center;
+.range {
+  font-family: monospace;
+  margin-top: 6px;
 }
 
-.gray { background:#555; }
-.yellow { background:#bfa600; }
-.green { background:#2e8b57; }
-.orange { background:#d97706; }
-.red { background:#b91c1c; }
+/* colores */
+.normal { color: #9aa4b2; }
+.orange { color: #ffa500; }
+.red { color: #ff4d4d; }
+.heavy { color: #7cf7c4; }
+
+.phrase {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
 </style>
 </head>
 
@@ -134,95 +123,94 @@ button {
 </div>
 
 <label>
-Daño mostrado en Arsenal
-<button class="help-btn" onclick="toggleHelp('h-dmg')">?</button>
+  Daño mostrado en Arsenal
+  <span class="help" onclick="alert('Usa el daño TOTAL que muestra el Arsenal, ya con mods equipados.')">?</span>
 </label>
-<div class="help" id="h-dmg">
-Usa el número TOTAL de daño que muestra el Arsenal con tus mods.
-No separes tipos de daño.
-</div>
-<input id="damage" type="number" value="2450"/>
+<input id="damage" type="number" value="2450" min="1"/>
 
 <label>
-Multiplicador crítico
-<button class="help-btn" onclick="toggleHelp('h-crit')">?</button>
+  Multiplicador crítico
+  <span class="help" onclick="alert('Usa SOLO el multiplicador crítico final del arma, no el chance.')">?</span>
 </label>
-<div class="help" id="h-crit">
-Es el Crit Mult final del arma con mods.
-</div>
-<input id="critMult" type="number" value="2.0" step="0.1"/>
+<input id="critMult" type="number" value="2.0" step="0.1" min="1"/>
 
 <button onclick="calculate()">Calcular</button>
+
 </div>
 
 <div class="card">
-<strong>Resultado</strong>
-<div class="range" id="normal"></div>
-<div class="range" id="orange"></div>
-<div class="range" id="red"></div>
-<div class="range" id="heavy"></div>
+<strong>Resultado estimado</strong>
 
-<div id="verdict" class="verdict"></div>
+<div id="normal" class="range normal"></div>
+<div class="phrase">“Puede cortar… pero no impresiona.”</div>
 
-<button class="help-btn" style="margin-top:10px" onclick="toggleHelp('h-why')">?</button>
-<div class="help" id="h-why">
-Esta herramienta evalúa el impacto del golpe, no la probabilidad.
-Crit Chance, Status y resistencias no se incluyen para mantener una lectura clara y rápida.
+<div id="orange" class="range orange"></div>
+<div class="phrase">“Empieza a mostrar carácter.”</div>
+
+<div id="red" class="range red"></div>
+<div class="phrase">“Esto ya mata campeones.”</div>
+
+<div id="heavy" class="range heavy"></div>
+
 </div>
+
+<div class="card">
+<strong>¿Por qué no se incluyen otros parámetros?</strong>
+<p style="font-size:0.8rem; opacity:0.8">
+Este calculador compara <b>potencial bruto</b>.  
+El chance crítico, estado, facciones, arcanos y buffs dependen del contexto, enemigo y build específica.  
+Aquí solo medimos <b>qué tan fuerte puede pegar un solo golpe</b>.
+</p>
 </div>
 
 </div>
 
 <script>
-function toggleHelp(id){
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === "block" ? "none" : "block";
+function updateUI() {
+  const isMelee = document.getElementById("weaponType").value === "melee";
+  document.getElementById("meleeOptions").classList.toggle("hidden", !isMelee);
 }
 
-function updateUI(){
-  document.getElementById("meleeOptions")
-    .classList.toggle("hidden", weaponType.value !== "melee");
-}
+function calculate() {
+  const dmg = Number(document.getElementById("damage").value);
+  const critMult = Number(document.getElementById("critMult").value);
 
-function verdict(r){
-  if(r < 0.75) return ["No cortará", "gray"];
-  if(r < 1.0) return ["Corta… apenas", "yellow"];
-  if(r < 1.5) return ["Cortará", "green"];
-  if(r < 2.5) return ["Cortará muy bien", "orange"];
-  return ["MATARÁ", "red"];
-}
-
-function calculate(){
-  const dmg = +damage.value;
-  const crit = +critMult.value;
-  const combo = +combo?.value || 1;
-  const weapon = weaponType.value;
-  const atk = attackType?.value;
+  if (dmg <= 0 || critMult <= 0) return;
 
   const min = dmg * 0.9;
   const max = dmg * 1.1;
 
-  normal.textContent = `Normal: ${min.toFixed(0)} → ${max.toFixed(0)}`;
-  orange.textContent = `Orange: ${(min*crit).toFixed(0)} → ${(max*crit).toFixed(0)}`;
-  red.textContent = `Red: ${(min*crit*crit).toFixed(0)} → ${(max*crit*crit).toFixed(0)}`;
+  const orangeMin = min * critMult;
+  const orangeMax = max * critMult;
 
-  heavy.textContent = "";
-  let ref = max;
+  const redMin = orangeMin * critMult;
+  const redMax = orangeMax * critMult;
 
-  if(weapon==="melee" && atk==="heavy"){
-    heavy.textContent =
-      `Heavy x${combo}: ${(min*combo).toFixed(0)} → ${(max*combo).toFixed(0)}`;
-    ref = max * combo;
+  document.getElementById("normal").textContent =
+    `Normal: ${min.toFixed(0)} → ${max.toFixed(0)}`;
+
+  document.getElementById("orange").textContent =
+    `Crit Naranja: ${orangeMin.toFixed(0)} → ${orangeMax.toFixed(0)}`;
+
+  document.getElementById("red").textContent =
+    `Crit Rojo: ${redMin.toFixed(0)} → ${redMax.toFixed(0)}`;
+
+  const weaponType = document.getElementById("weaponType").value;
+  const attackType = document.getElementById("attackType")?.value;
+  const combo = Number(document.getElementById("combo")?.value || 1);
+
+  if (weaponType === "melee" && attackType === "heavy") {
+    document.getElementById("heavy").textContent =
+      `Heavy (x${combo}): ${(min*combo).toFixed(0)} → ${(max*combo).toFixed(0)}`;
+  } else {
+    document.getElementById("heavy").textContent = "";
   }
-
-  const ratio = ref / dmg;
-  const [text, color] = verdict(ratio);
-  verdictDiv.textContent = text;
-  verdictDiv.className = `verdict ${color}`;
 }
 
 updateUI();
 calculate();
 </script>
+
 </body>
 </html>
+
